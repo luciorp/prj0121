@@ -54,7 +54,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
-
+#include "stm32f1xx_hal.h"
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
@@ -75,6 +75,8 @@
 #define RELE2_GPIO_Port GPIOA
 #define DS18B20_DATA_Pin GPIO_PIN_6
 #define DS18B20_DATA_GPIO_Port GPIOA
+#define RELE1_Pin GPIO_PIN_0
+#define RELE1_GPIO_Port GPIOB
 #define ESP_RST_Pin GPIO_PIN_1
 #define ESP_RST_GPIO_Port GPIOB
 #define ESP_TX_Pin GPIO_PIN_10
@@ -85,8 +87,6 @@
 #define LCD_CS_GPIO_Port GPIOB
 #define LCD_SCK_Pin GPIO_PIN_13
 #define LCD_SCK_GPIO_Port GPIOB
-#define RELE1_Pin GPIO_PIN_14
-#define RELE1_GPIO_Port GPIOB
 #define LCD_MOSI_Pin GPIO_PIN_15
 #define LCD_MOSI_GPIO_Port GPIOB
 #define LCD_RST_Pin GPIO_PIN_8
@@ -115,6 +115,93 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
+
+
+#define VDD_APPLI                      ((uint32_t) 3300)   /* Value of analog voltage supply Vdda (unit: mV) */
+#define RANGE_12BITS                   ((uint32_t) 4095)   /* Max value with a full range of 12 bits */
+#define DIVPARAM						((uint32_t) 10)
+/* Internal temperature sensor: constants data used for indicative values in  */
+/* this example. Refer to device datasheet for min/typ/max values.            */
+/* For more accurate values, device should be calibrated on offset and slope  */
+/* for application temperature range.                                         */
+#define INTERNAL_TEMPSENSOR_V25        ((int32_t)1430)         /* Internal temperature sensor, parameter V25 (unit: mV). Refer to device datasheet for min/typ/max values. */
+#define INTERNAL_TEMPSENSOR_AVGSLOPE   ((int32_t)4300)         /* Internal temperature sensor, parameter Avg_Slope (unit: uV/DegCelsius). Refer to device datasheet for min/typ/max values. */                                                               /* This calibration parameter is intended to calculate the actual VDDA from Vrefint ADC measurement. */
+
+/* Private macro -------------------------------------------------------------*/
+
+/**
+  * @brief  Computation of temperature (unit: degree Celsius) from the internal
+  *         temperature sensor measurement by ADC.
+  *         Computation is using temperature sensor standard parameters (refer
+  *         to device datasheet).
+  *         Computation formula:
+  *         Temperature = (VTS - V25)/Avg_Slope + 25
+  *         with VTS = temperature sensor voltage
+  *              Avg_Slope = temperature sensor slope (unit: uV/DegCelsius)
+  *              V25 = temperature sensor @25degC and Vdda 3.3V (unit: mV)
+  *         Calculation validity conditioned to settings:
+  *          - ADC resolution 12 bits (need to scale value if using a different
+  *            resolution).
+  *          - Power supply of analog voltage Vdda 3.3V (need to scale value
+  *            if using a different analog voltage supply value).
+  * @param TS_ADC_DATA: Temperature sensor digital value measured by ADC
+  * @retval None
+  */
+#define COMPUTATION_TEMPERATURE_STD_PARAMS(TS_ADC_DATA)                        \
+  ((((int32_t)(INTERNAL_TEMPSENSOR_V25 - (((TS_ADC_DATA) * VDD_APPLI) / RANGE_12BITS)   \
+     ) * 1000                                                                  \
+    ) / INTERNAL_TEMPSENSOR_AVGSLOPE                                           \
+   ) + 25                                                                      \
+  )
+
+/**
+  * @brief  Computation of voltage (unit: mV) from ADC measurement digital
+  *         value on range 12 bits.
+  *         Calculation validity conditioned to settings:
+  *          - ADC resolution 12 bits (need to scale value if using a different
+  *            resolution).
+  *          - Power supply of analog voltage Vdda 3.3V (need to scale value
+  *            if using a different analog voltage supply value).
+  * @param ADC_DATA: Digital value measured by ADC
+  * @retval None
+  */
+#define COMPUTATION_DIGITAL_12BITS_TO_VOLTAGE(ADC_DATA)                        \
+  ( ((ADC_DATA) * VDD_APPLI / RANGE_12BITS) * DIVPARAM)
+
+typedef struct
+{
+	char conexao;
+	int tensaoCarga;
+	int corrente;
+	int potencia;
+	int	tempAgua;
+	int	tempProc;
+	int	tensaoBateria;
+	int tensaoPainel;
+	char motor1;
+	char motor2;
+	char isDia;
+	char isFail;
+	char isError;
+	char normalTemp;
+}Status_t;
+
+
+typedef struct
+{
+	int	conexao;
+	int tempoLigadoDia;
+	int tempoDesligadoDia;
+	int tempoLigadoNoite;
+	int tempoDesligadoNoite;
+	int tempProcMax;
+	int	tempAguaMax;
+	int	VbatMin;
+	int	VcargaMin;
+	int Imax;
+	int thresholdDia;
+
+}Config_t;
 
 /* USER CODE END Private defines */
 

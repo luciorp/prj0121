@@ -107,7 +107,7 @@ int seq = 0;
 
 
 
-//ReimplementaÁ„o das funÁıes para direcionar o printf para a UART2
+//Reimplementa√ß√£o das fun√ß√µes para direcionar o printf para a UART2
 int __io_putchar(int ch) {
 	uint8_t c[1];
 	c[0] = ch & 0x00FF;
@@ -1098,7 +1098,7 @@ void motores(void const * argument)
 				Status.motor1 = 1;
 				Status.motor2 = 1;
 				osMutexRelease(mutexStatusHandle);
-				printf("Temperatura da ¡gua Elevada - Ambos Motores Ligados\n\r");
+				printf("Temperatura da √Ågua Elevada - Ambos Motores Ligados\n\r");
 			}
 		}else{
 			statusMotor = 0;
@@ -1217,7 +1217,7 @@ void rede(void const * argument)
 
 	Wifi_SetMode(WifiMode_Station);
 
-	conexao = Wifi_Station_ConnectToAp("wifi@home","linguicinha-11-2008-becao!",NULL);
+	conexao = Wifi_Station_ConnectToAp("","",NULL);
 
 	osMutexWait(mutexStatusHandle, 1000);
 	Status.conexao = conexao;
